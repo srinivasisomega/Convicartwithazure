@@ -1,0 +1,130 @@
+﻿@model ConvicartWebApp.PresentationLayer.ViewModels.ForYouPageViewModel
+<div class="container centering mt-5">
+    <div class="d-flex justify-content-center mb-4">
+        <h2>For You, @Model.Customer.Name</h2>
+    </div>
+
+    @if (Model.VideoPosts != null && Model.VideoPosts.Any())
+    {
+        <div class="post-container d-flex flex-column align-items-center">
+            @foreach (var video in Model.VideoPosts)
+            {
+                <div class="post-card shadow-sm mb-4">
+                    
+
+                    <!-- Video content -->
+                    <div class="post-content">
+                        <video controls class="w-100 rounded" style="height: auto; max-height: 400px; object-fit: cover;">
+                            <source src="@video.VideoPath" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+
+                    <!-- Post footer like file name or description -->
+                    <div class="post-footer p-3 text-center">
+                        <p class="file-name mb-0">@video.FileName</p>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Pagination Links -->
+        <div class="d-flex justify-content-center mt-4">
+            @if (Model.TotalPages > 1)
+            {
+                <ul class="pagination">
+                    <li class="page-item @(Model.PageIndex == 1 ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("ForYou", "Customer", new { page = Model.PageIndex - 1 })">Previous</a>
+                    </li>
+
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(Model.PageIndex == i ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("ForYou", "Customer", new { page = i })">@i</a>
+                        </li>
+                    }
+
+                    <li class="page-item @(Model.PageIndex == Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("ForYou", "Customer", new { page = Model.PageIndex + 1 })">Next</a>
+                    </li>
+                </ul>
+            }
+        </div>
+    }
+    else
+    {
+        <p class="text-center">No videos uploaded yet.</p>
+    }
+</div>
+
+<style>
+    .centering{
+        align-items:center;
+    }
+    /* Container and card styling */
+    .post-container {
+        width: 100%;
+        max-width: 600px;
+    }
+
+    .post-card {
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    /* Header styling */
+    .post-header {
+        border-bottom: 1px solid #eee;
+    }
+
+    .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+
+    .user-name {
+        font-weight: 600;
+        color: #333;
+    }
+
+    /* Video and footer styling */
+    .post-content {
+        max-height: 400px;
+        overflow: hidden;
+    }
+
+    .post-footer {
+        font-size: 0.9rem;
+        color: #555;
+    }
+
+    /* Pagination styling */
+    .pagination {
+        justify-content: center;
+        font-size: 14px;
+    }
+
+        .pagination .page-link {
+            color: #999;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+        }
+
+        .pagination .page-item.disabled .page-link {
+            color: #ccc;
+        }
+
+        .pagination .page-link:hover {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .pagination .active .page-link {
+            background-color: #007bff;
+            color: white;
+        }
+</style>

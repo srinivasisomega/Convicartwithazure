@@ -1,0 +1,104 @@
+﻿@{
+    ViewData["Title"] = "Order Confirmation";
+}
+
+<div class="confirmation-container">
+    <div class="confirmation-box">
+        <img src="https://cdn-icons-png.flaticon.com/512/845/845646.png" alt="Success Icon" class="success-icon">
+        <h2>Your Order Has Been Successfully Placed!</h2>
+        <p>Thank you for your purchase. You will be redirected to the store shortly.</p>
+    </div>
+</div>
+
+<script>
+    setTimeout(function () {
+        window.location.href = '@Url.Action("Store", "Store")'; // Redirect to Store
+    }, 3000); // 3000 milliseconds = 3 seconds
+</script>
+
+<style>
+/* General body styling */
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f0f4f8;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Make sure body takes full height */
+}
+
+/* Centering confirmation content */
+.confirmation-container {
+    flex: 1; /* Take up available space */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0f4f8;
+    margin-top:30px;
+}
+
+/* Confirmation message box */
+.confirmation-box {
+    background-color: white;
+    text-align: center;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    max-width: 500px;
+    width: 100%;
+    margin: 0 auto;
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Slight hover effect for confirmation box */
+.confirmation-box:hover {
+    transform: translateY(-5px);
+}
+
+/* Success icon styling */
+.success-icon {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 20px;
+}
+
+/* Heading styling */
+h2 {
+    color: #007BFF;
+    font-size: 28px;
+    margin-bottom: 15px;
+}
+
+/* Paragraph styling */
+p {
+    font-size: 18px;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+/* Footer adjustments */
+footer {
+    background-color: #F3BE57;
+    color: black;
+    margin-top: auto; /* Pushes footer to the bottom */
+    padding: 20px;
+    text-align: center;
+}
+
+/* Make sure the footer content stays intact and centered */
+footer .footer-section {
+    margin: 10px 0;
+    text-align: center;
+}
+
+/* Header adjustments to make sure it looks consistent */
+.header1, .header2 {
+    background-color: #F3BE57;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Ensure footer and header are responsive */
+
+</style>

@@ -1,0 +1,63 @@
+﻿@model IEnumerable<RecipeSteps>
+@{
+    // Initialize a counter
+    int count = 1;
+}
+
+<div class="recipe-steps">
+    <h3>Recipe Steps</h3>
+    <ol>
+        @if (Model != null && Model.Any())
+        {
+            foreach (var step in Model)
+            {
+                <li>
+
+                    <img src="data:image;base64,@Convert.ToBase64String(step.Stepimage)"
+                         alt="Step @step.StepNumber"
+                         class="recipe-step-image"
+                         onerror="this.onerror=null; this.src='@Url.Content("~/Images/Recipe/default-image.jpg")';" />
+
+
+                    <h5>@count</h5>
+                    <p>@step.StepDescription</p>
+                    @{
+                        count++;
+                    }
+                </li>
+            }
+        }
+        else
+        {
+            <li>No steps available for this recipe.</li>
+        }
+    </ol>
+</div>
+
+<style>
+    .recipe-steps {
+        margin-top: 20px;
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 5px;
+    }
+
+        .recipe-steps li {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-evenly;
+            margin-bottom: 10px;
+        }
+
+            .recipe-steps li p {
+                margin: 0;
+                padding: 5px;
+                width: 170px;
+            }
+
+    .recipe-step-image {
+        max-width: 150px; /* Ensures the image fits within the container */
+        height: auto; /* Maintains aspect ratio */
+    }
+</style>

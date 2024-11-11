@@ -1,0 +1,39 @@
+﻿@model Customer
+
+<style>
+    label {
+        text-align: start;
+    }
+</style>
+
+<h2 class="text-center mb-4">Sign In</h2>
+
+<!-- Display validation summary specific to the Sign In form -->
+@if (ViewData["SignInErrors"] != null)
+{
+    @foreach (var error in (List<string>)ViewData["SignInErrors"])
+    {
+        <h6 style="color:darkred;">@error</h6>
+    }
+}
+
+<form asp-action="SignIn" method="post" class="needs-validation" novalidate>
+    <div class="form-group">
+        <label for="Email">Email*</label>
+        <input asp-for="Email" class="form-control" placeholder="Enter your email" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label for="Password">Password*</label>
+        <input asp-for="Password" type="password" class="form-control" placeholder="Enter your password" />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3 text-right">
+        <a href="@Url.Action("ForgotPassword", "Customer")" class="forgot-password">Forgot the password</a>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+</form>
+<a href="@Url.Action("SignInWithGoogle", "Customer")" class="btn btn-danger">Sign in with Google</a>

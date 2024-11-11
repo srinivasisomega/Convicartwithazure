@@ -1,0 +1,332 @@
+﻿@{
+    ViewData["Title"] = "Contact us";
+}
+@model QuerySubmission
+<style>
+    
+    .h1-heading {
+        font-size: 48px;
+        font-weight: 600;}
+
+    .border-left-main {
+        border-left: 7px solid #ff930d;
+        padding-left: 10px;
+    }
+    .firstcontacthold{
+        display:flex;
+        flex-direction:row;
+        justify-content:space-between;
+        width:100%;
+        background-color:black;
+        padding:40px;
+    }
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    .details-container {
+        display: flex;
+        flex-direction:column;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .details-left, .details-right {
+        width: 30%;
+        padding: 20px;
+        margin: 20px;
+        
+    }
+
+    .details-right {
+        display: flex;
+        flex-direction: column;
+    }
+
+        .details-left h2, .details-right h3 {
+            color:white;
+            font-size: 24px;
+        }
+
+        .details-left p, .details-right p {
+            color: white;
+            font-size: 16px;
+            margin-left: 30px;
+        }
+
+    .input-section {
+        background-color: #f0f0f0;
+        padding: 20px;
+        border-radius: 8px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 14px;
+        color: #333;
+    }
+
+    input[type="text"], input[type="tel"], input[type="email"], textarea {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    textarea {
+        resize: none;
+    }
+
+    .submit-btn {
+        background-color: #FFA500;
+        color: #fff;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+        .submit-btn:hover {
+            background-color: #ff8c00;
+        }
+
+    .map-section {
+        padding: 10px;
+    }
+
+        .map-section .map-container img {
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        .map-section h3 {
+            margin-bottom: 20px;
+            width:stretch;
+            color: white;
+        }
+
+    .default-btn:hover {
+        box-shadow: -8px 8px 0 0 rgba(0, 0, 0, .2);
+        transform: translate(0, -6px);
+        background-color: #0d4a79;
+        color: #fff;
+    }
+
+    .default-btn {
+        padding: 14px 24px;
+        background-color: #F3BE57;
+        color: #fff;
+        box-shadow: -5px 5px 0 0 #0d4a7948;
+        display: flex;
+        font-weight: 600;
+        font-size: 16px;
+        justify-content: center;
+        align-items: center;
+        border-radius: 30px;
+        transition: .3s;
+    }
+
+    .btn {
+        display: inline-block;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        text-align: center;
+        text-decoration: none;
+        vertical-align: middle;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        border: 1px solid transparent;
+        padding: .375rem .75rem;
+        font-size: 1rem;
+        border-radius: .25rem;
+        transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    }
+    /* Main Container Styling */
+    .new-contact-holder {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        justify-content: space-between;
+        max-width: 1200px;
+        margin: auto;
+        padding: 50px 0;
+    }
+
+    /* Left Section (Image and Text) */
+    .contact-form-bg {
+        background-image: linear-gradient(90deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://avtrix.co.nz/assets/NewImages/contact-3.jpg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        width: 50%;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+        .contact-form-bg h5 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .contact-form-bg h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 0;
+        }
+
+    /* Right Section (Form) */
+    #contact-form {
+        width: 50%;
+        padding: 40px;
+    }
+
+        #contact-form h2 {
+            font-size: 28px;
+            color: #003366;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        #contact-form p {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+    /* Form Styling */
+    .input-section {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #333;
+        }
+
+            .form-group input:focus,
+            .form-group textarea:focus {
+                outline: none;
+                border-color: #ff9800;
+                box-shadow: 0 0 5px rgba(255, 152, 0, 0.5);
+            }
+
+    /* Submit Button Styling */
+    .submit-btn {
+        background-color: #ff9800;
+        color: white;
+        padding: 10px 25px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+        .submit-btn:hover {
+            background-color: #e68900;
+        }
+
+</style>
+<div style="position: relative; width: 100%; height: 500px;">
+    <a href="#contact-form">
+        <button class="btn default-btn" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+            Contact Us
+        </button>
+    </a>
+    <img style="display: block; -webkit-user-select: none; margin: 0px; cursor: zoom-in; background-color: hsl(0, 0%, 90%); transition: background-color 300ms;" src="https://avtrix.co.nz/assets/media/ContactUs/contact-banner-.png" width="100%" height="500px">
+</div>
+
+<div class="details-container">
+    <div class="firstcontacthold">
+        <div class="details-right">
+            <h1 class="border-left-main h1-heading text-white">Contact Us</h1>
+            <p class=" text-white para-heading">Connect with us today and let's start a conversation!</p>
+            <hr />
+            <p><strong>Mobile:</strong><br>+918384321232<br>+919948284876</p>
+            <p><strong>Email:</strong><br>Sabsbs@gmail.com<br>Customer.Convicart@gmail.com</p>
+        </div>
+        <div class="map-section">
+            <h3>Our Locations near you</h3>
+            <div class="map-container">
+                <img src="~/Images/map.png" alt="Map image" />
+            </div>
+        </div>
+      
+    </div>
+    <div class="new-contact-holder">
+        <div class="col-lg-5 contact-form-bg d-flex justify-content-center align-items-center overflow-hidden aos-init aos-animate" data-aos="fade-up" data-aos-offset="0">
+            <div class="border-left-main m-5 overflow-hidden">
+                <h5 class="main-sub-heading text-white">Have a Problem with the App</h5>
+                <h1 class="h1-heading text-white">Let's Have a Conversation</h1>
+            </div>
+        </div>
+        <div id="contact-form" class="details-left">
+            <h2>Fill out the form below.</h2>
+            <p>Looking for help regarding your order. Talk to us!</p>
+
+            <div class="input-section">
+                <form asp-action="Create">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="form-group">
+                        <label asp-for="Name" class="control-label"></label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Mobile" class="control-label"></label>
+                        <input asp-for="Mobile" class="form-control" />
+                        <span asp-validation-for="Mobile" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Email" class="control-label"></label>
+                        <input asp-for="Email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Description" class="control-label"></label>
+                        <input asp-for="Description" class="form-control" />
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <input type="submit" value="Create" class="btn btn-primary" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Enable client-side validation -->
+    <partial name="_ValidationScriptsPartial" />
+}
