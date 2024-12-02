@@ -8,7 +8,7 @@ namespace ConvicartWebApp.BussinessLogicLayer.Services
         private readonly string _smtpHost = "smtp.gmail.com";
         private readonly int _smtpPort = 587;
         private readonly string _smtpUser = "convicart6@gmail.com";
-        private readonly string _smtpPass = "ywmw wrsv jxya uxhg";
+        private readonly string _smtpPass = "mjmj gqcq xcww wvza";
 
         public void SendResetCodeEmail(string email, string resetCode)
         {
@@ -21,7 +21,7 @@ namespace ConvicartWebApp.BussinessLogicLayer.Services
 
             var mailMessage = new MailMessage
             {
-                From = new MailAddress(_smtpUser),
+                From = new MailAddress("srinivas.pallamparthi@cognine.com"),
                 Subject = "Password Reset Code",
                 Body = $"Your password reset code is: {resetCode}",
                 IsBodyHtml = true,
