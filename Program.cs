@@ -74,7 +74,7 @@ void ConfigureServices(WebApplicationBuilder builder)
 
 void ConfigurePipeline(WebApplication app)
 {
-    if (!app.Environment.IsDevelopment())
+    if (!app.Environment.IsProduction())
     {
         app.UseExceptionHandler("/Home/Error");
         app.UseHsts();
