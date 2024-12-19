@@ -168,6 +168,14 @@
         }
 
         async function startUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please select a video file to upload.");
+                return;
+            }
+
             isPaused = false;
             currentChunkIndex = localStorage.getItem("currentChunkIndex") || 0;
             document.getElementById("pauseButton").style.display = "inline";
@@ -186,14 +194,11 @@
             completionMessage.style.display = 'none';
 
             const arcProgress = document.querySelector('.arc-progress');
-            const arcBg = document.querySelector('.arc-bg'); // Select the background arc
-
-            // Calculate the actual length of the arc path dynamically
+            const arcBg = document.querySelector('.arc-bg');
             const arcLength = arcBg.getTotalLength();
 
-            // Initialize progress
             arcProgress.style.strokeDasharray = arcLength;
-            arcProgress.style.strokeDashoffset = arcLength; // Start from full offset (hidden)
+            arcProgress.style.strokeDashoffset = arcLength;
 
             for (currentChunkIndex; currentChunkIndex < totalChunks; currentChunkIndex++) {
                 if (isPaused) break;
@@ -210,20 +215,22 @@
                 formData.append("customerId", customerId);
 
                 try {
-                    await fetch("/Customer/UploadChunk", {
+                    const response = await fetch("/Customer/UploadChunk", {
                         method: "POST",
                         body: formData
                     });
 
-                    // Save progress in case of interruption
+                    if (!response.ok) {
+                        throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+                    }
+
                     localStorage.setItem("currentChunkIndex", currentChunkIndex + 1);
 
-                    // Update arc progress based on the calculated arc length
                     const offset = arcLength - ((currentChunkIndex + 1) / totalChunks * arcLength);
                     arcProgress.style.strokeDashoffset = offset;
                 } catch (error) {
-                    console.error(`Error uploading chunk ${currentChunkIndex + 1}: ${error}`);
-                    alert(`Network error. Upload paused. Retrying when connection is restored...`);
+                    console.error(`Error uploading chunk ${currentChunkIndex + 1}: ${error.message}`);
+                    alert("An error occurred. Upload paused. Please check your connection or try again.");
                     isPaused = true;
                     return;
                 }
@@ -232,12 +239,10 @@
             if (currentChunkIndex === totalChunks) {
                 localStorage.removeItem("currentChunkIndex");
                 completionMessage.style.display = 'block';
-                arcProgress.style.strokeDashoffset = 581.427; // Set to fully completed
 
                 document.getElementById("pauseButton").style.display = "none";
                 document.getElementById("resumeButton").style.display = "none";
 
-                // Hide the video preview
                 document.getElementById("videoPreview").style.display = "none";
 
                 setTimeout(() => {
@@ -251,6 +256,7 @@
             isPaused = true;
             document.getElementById("pauseButton").style.display = "none";
             document.getElementById("resumeButton").style.display = "inline";
+            alert("Upload paused. Click 'Resume' to continue.");
         }
 
         async function resumeUpload() {
@@ -258,11 +264,11 @@
                 isPaused = false;
                 document.getElementById("pauseButton").style.display = "inline";
                 document.getElementById("resumeButton").style.display = "none";
+                alert("Upload resumed.");
                 await uploadFile();
             }
         }
     </script>
-
 
 <style>
     img{

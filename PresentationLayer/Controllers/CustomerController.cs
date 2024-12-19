@@ -8,10 +8,13 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using System.Security.Claims;
+using System.Net.Http;
+
 using Microsoft.EntityFrameworkCore;
 using ConvicartWebApp.BussinessLogicLayer.Services;
 using System.ComponentModel.Design;
 using System.IO;
+using Azure.Storage.Blobs;
 namespace ConvicartWebApp.PresentationLayer.Controllers
 {
     /// <summary>
@@ -25,12 +28,14 @@ namespace ConvicartWebApp.PresentationLayer.Controllers
         private readonly IPreferenceService PreferenceService;
         private readonly IPasswordResetService PasswordResetService;
         private readonly ISubscriptionService SubscriptionService;
-        public CustomerController(ConvicartWarehouseContext context, ISubscriptionService subscriptionService, ICustomerService customerService, IPreferenceService preferenceService, IPasswordResetService passwordResetService)
+        public CustomerController(IConfiguration configuration,ConvicartWarehouseContext context, ISubscriptionService subscriptionService, ICustomerService customerService, IPreferenceService preferenceService, IPasswordResetService passwordResetService)
         {
             CustomerService = customerService;
             PreferenceService = preferenceService;
             PasswordResetService = passwordResetService;
             SubscriptionService = subscriptionService;
+            _connectionString = configuration["AzureBlobStorage:ConnectionString"];
+            _containerName = configuration["AzureBlobStorage:ContainerName"];
         }
 
         // POST: Handle SignIn by checking if there are matching email and password in the customer table, if
@@ -463,118 +468,114 @@ namespace ConvicartWebApp.PresentationLayer.Controllers
 
             return View("SubscriptionUpdate", viewModel);
         }
-        private readonly string _uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+        private readonly string _connectionString;
+        private readonly string _containerName;
+        
+
+
         [HttpPost]
+        [Route("Customer/UploadChunk")]
         public async Task<IActionResult> UploadChunk(IFormFile file, string fileName, int chunkIndex, int totalChunks, int customerId)
         {
-            // Retrieve the customer to get their folder name
+            // Retrieve customer details
             var customer = CustomerService.GetCustomerById(customerId);
             if (customer == null || string.IsNullOrWhiteSpace(customer.Name))
             {
                 return BadRequest("Invalid customer.");
             }
 
-            // Create a customer-specific folder path based on the customer's name
-            var customerFolderPath = Path.Combine(_uploadPath, customer.Name);
+            // Sanitize customer name and file name
+            var sanitizedCustomerName = SanitizeBlobName(customer.Name);
+            var sanitizedFileName = SanitizeBlobName(fileName);
 
-            // Ensure the customer-specific upload path exists
-            if (!Directory.Exists(customerFolderPath))
+            // Construct the blob name and path
+            var blobFolderPath = $"{sanitizedCustomerName}/";
+            var blobChunkName = $"{blobFolderPath}{sanitizedFileName}.part_{chunkIndex}";
+
+            try
             {
-                Directory.CreateDirectory(customerFolderPath);
+                // Upload the file chunk to Azure Blob Storage
+                var blobServiceClient = new BlobServiceClient(_connectionString);
+                var blobContainerClient = blobServiceClient.GetBlobContainerClient(_containerName);
+                var blobClient = blobContainerClient.GetBlobClient(blobChunkName);
+
+                using (var stream = file.OpenReadStream())
+                {
+                    await blobClient.UploadAsync(stream, overwrite: true);
+                }
+
+                // Combine chunks if this is the last one
+                if (chunkIndex == totalChunks - 1)
+                {
+                    await CombineChunks(blobFolderPath, sanitizedFileName, totalChunks, blobContainerClient);
+                }
+
+                return Ok();
             }
-
-            // Temporary path to save each chunk with unique naming
-            var tempFilePath = Path.Combine(customerFolderPath, $"{fileName}.part_{chunkIndex}");
-
-            // Save the current chunk
-            using (var stream = new FileStream(tempFilePath, FileMode.Create))
+            catch (Azure.RequestFailedException ex)
             {
-                await file.CopyToAsync(stream);
+                // Log the exception and return a user-friendly error message
+                Console.Error.WriteLine($"Error uploading blob: {ex.Message}");
+                return StatusCode(500, "Failed to upload file chunk. Please try again.");
             }
-
-            // Once all chunks have been uploaded, combine them
-            if (chunkIndex == totalChunks - 1)
-            {
-                await CombineChunks(fileName, totalChunks, customerFolderPath);
-            }
-
-            return Ok();
         }
 
-        private async Task CombineChunks(string fileName, int totalChunks, string customerFolderPath)
-        {
-            var finalPath = Path.Combine(customerFolderPath, fileName);
 
-            using (var finalFileStream = new FileStream(finalPath, FileMode.Create))
+        private async Task CombineChunks(string blobFolderPath, string sanitizedFileName, int totalChunks, BlobContainerClient blobContainerClient)
+        {
+            var finalBlobName = $"{blobFolderPath}{sanitizedFileName}";
+
+            // Download and combine chunks
+            using (var memoryStream = new MemoryStream())
             {
                 for (int i = 0; i < totalChunks; i++)
                 {
-                    var chunkPath = Path.Combine(customerFolderPath, $"{fileName}.part_{i}");
-                    using (var chunkFileStream = new FileStream(chunkPath, FileMode.Open))
-                    {
-                        await chunkFileStream.CopyToAsync(finalFileStream);
-                    }
-                    System.IO.File.Delete(chunkPath); // Delete chunk after appending to final file
+                    var chunkBlobName = $"{blobFolderPath}{sanitizedFileName}.part_{i}";
+                    var chunkBlobClient = blobContainerClient.GetBlobClient(chunkBlobName);
+
+                    var downloadResponse = await chunkBlobClient.DownloadAsync();
+                    await downloadResponse.Value.Content.CopyToAsync(memoryStream);
+
+                    // Delete the chunk blob after appending
+                    await chunkBlobClient.DeleteAsync();
                 }
+
+                memoryStream.Position = 0;
+                var finalBlobClient = blobContainerClient.GetBlobClient(finalBlobName);
+                await finalBlobClient.UploadAsync(memoryStream, overwrite: true);
             }
         }
+
         public async Task<IActionResult> ForYou(int page = 1)
         {
             var customerId = HttpContext.Items["CustomerId"] as int?;
             if (customerId == null) return RedirectToAction("SignUp", "Customer");
 
-            // Retrieve customer information
+            var blobServiceClient = new BlobServiceClient(_connectionString);
+            var blobContainerClient = blobServiceClient.GetBlobContainerClient(_containerName);
             var customer = await CustomerService.GetCustomerByIdAsync(customerId.Value);
-            if (customer == null) return NotFound();
+            if (customer == null) return RedirectToAction("SignUp", "Customer");
 
-            // Get current customer's preferences
-            var currentCustomerPreferences = await PreferenceService.GetCustomerPreferencesAsync(customerId.Value);
+            var blobs = blobContainerClient.GetBlobsAsync(prefix: $"{customer.Name}/");
+            var videoUrls = new List<string>();
 
-            if (!currentCustomerPreferences.Any())
+            await foreach (var blobItem in blobs)
             {
-                // If no preferences found, return an empty list of videos
-                return View(new ForYouPageViewModel
-                {
-                    Customer = customer,
-                    VideoPosts = new List<VideoPostViewModel>(),
-                    PageIndex = page,
-                    TotalPages = 0
-                });
+                var blobUri = blobContainerClient.GetBlobClient(blobItem.Name).Uri.ToString();
+                videoUrls.Add(blobUri);
             }
 
-            // Find similar customers based on preferences
-            var similarCustomerIds = await PreferenceService.GetSimilarCustomerIdsAsync(customerId.Value, currentCustomerPreferences);
-
-            // Initialize a list to store video file paths
-            var allVideoFiles = new List<string>();
-
-            // Collect videos from each similar customer's video directory
-            foreach (var similarCustomerId in similarCustomerIds)
-            {
-                var similarCustomer = await CustomerService.GetCustomerByIdAsync(similarCustomerId);
-                if (similarCustomer == null) continue;
-
-                var similarVideoDirectory = Path.Combine(_uploadPath, similarCustomer.Name);
-
-                if (Directory.Exists(similarVideoDirectory))
-                {
-                    var videoFiles = Directory.GetFiles(similarVideoDirectory, "*.mp4");
-                    allVideoFiles.AddRange(videoFiles);
-                }
-            }
-
-            // Pagination logic
             var pageSize = 4;
-            var totalVideos = allVideoFiles.Count;
+            var totalVideos = videoUrls.Count;
             var totalPages = (int)Math.Ceiling((double)totalVideos / pageSize);
 
-            var videosOnCurrentPage = allVideoFiles
+            var videosOnCurrentPage = videoUrls
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(video => new VideoPostViewModel
+                .Select(url => new VideoPostViewModel
                 {
-                    VideoPath = Path.Combine("/uploads", Path.GetFileName(Path.GetDirectoryName(video)), Path.GetFileName(video)),
-                    FileName = Path.GetFileName(video)
+                    VideoPath = url,
+                    FileName = Path.GetFileName(url)
                 })
                 .ToList();
 
@@ -589,6 +590,18 @@ namespace ConvicartWebApp.PresentationLayer.Controllers
             return View(viewModel);
         }
 
+        private string SanitizeBlobName(string name)
+        {
+            // Replace invalid characters with a hyphen
+            var invalidChars = Path.GetInvalidFileNameChars().Concat(new[] { '/', '\\', '?', '#', '[', ']' });
+            foreach (var invalidChar in invalidChars)
+            {
+                name = name.Replace(invalidChar, '-');
+            }
+
+            // Trim and return sanitized name
+            return name.Trim();
+        }
 
 
 
