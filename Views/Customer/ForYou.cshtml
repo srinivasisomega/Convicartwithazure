@@ -56,6 +56,114 @@
         <p class="text-center">No videos uploaded yet.</p>
     }
 </div>
+<script>
+    let isPaused = false;
+    let currentChunkIndex = 0;
+
+    // Show video preview
+    function showVideoPreview(event) {
+        const file = event.target.files[0];
+        const videoPreview = document.getElementById("videoPreview");
+
+        if (file) {
+            const fileURL = URL.createObjectURL(file);
+            videoPreview.src = fileURL;
+            videoPreview.style.display = "block";
+        }
+    }
+
+    async function startUpload() {
+        isPaused = false;
+        currentChunkIndex = localStorage.getItem("currentChunkIndex") || 0;
+        document.getElementById("pauseButton").style.display = "inline";
+        document.getElementById("resumeButton").style.display = "none";
+        await uploadFile();
+    }
+
+    async function uploadFile() {
+        const fileInput = document.getElementById('fileInput');
+        const customerId = document.getElementById('customerId').value;
+        const file = fileInput.files[0];
+        const chunkSize = 2 * 1024 * 1024; // 2MB chunks
+        const totalChunks = Math.ceil(file.size / chunkSize);
+
+        const completionMessage = document.getElementById('completionMessage');
+        completionMessage.style.display = 'none';
+
+        const arcProgress = document.querySelector('.arc-progress');
+        const arcBg = document.querySelector('.arc-bg'); // Select the background arc
+
+        // Calculate the actual length of the arc path dynamically
+        const arcLength = arcBg.getTotalLength();
+
+        // Initialize progress
+        arcProgress.style.strokeDasharray = arcLength;
+        arcProgress.style.strokeDashoffset = arcLength; // Start from full offset (hidden)
+
+        for (currentChunkIndex; currentChunkIndex < totalChunks; currentChunkIndex++) {
+            if (isPaused) break;
+
+            const start = currentChunkIndex * chunkSize;
+            const end = start + chunkSize;
+            const chunk = file.slice(start, end);
+
+            try {
+                await fetch("https://<azure-function-url>/api/upload-video?fileName=" +
+                    encodeURIComponent(file.name) +
+                    "&chunkIndex=" + currentChunkIndex +
+                    "&totalChunks=" + totalChunks +
+                    "&customerId=" + customerId, {
+                        method: "POST",
+                        body: chunk
+                    });
+
+                // Save progress in case of interruption
+                localStorage.setItem("currentChunkIndex", currentChunkIndex + 1);
+
+                // Update arc progress based on the calculated arc length
+                const offset = arcLength - ((currentChunkIndex + 1) / totalChunks * arcLength);
+                arcProgress.style.strokeDashoffset = offset;
+            } catch (error) {
+                console.error(`Error uploading chunk ${currentChunkIndex + 1}: ${error}`);
+                alert(`Network error. Upload paused. Retrying when connection is restored...`);
+                isPaused = true;
+                return;
+            }
+        }
+
+        if (currentChunkIndex === totalChunks) {
+            localStorage.removeItem("currentChunkIndex");
+            completionMessage.style.display = 'block';
+            arcProgress.style.strokeDashoffset = 581.427; // Set to fully completed
+
+            document.getElementById("pauseButton").style.display = "none";
+            document.getElementById("resumeButton").style.display = "none";
+
+            // Hide the video preview
+            document.getElementById("videoPreview").style.display = "none";
+
+            setTimeout(() => {
+                fileInput.value = "";
+                completionMessage.style.display = 'none';
+            }, 3000);
+        }
+    }
+
+    function pauseUpload() {
+        isPaused = true;
+        document.getElementById("pauseButton").style.display = "none";
+        document.getElementById("resumeButton").style.display = "inline";
+    }
+
+    async function resumeUpload() {
+        if (isPaused) {
+            isPaused = false;
+            document.getElementById("pauseButton").style.display = "inline";
+            document.getElementById("resumeButton").style.display = "none";
+            await uploadFile();
+        }
+    }
+</script>
 
 <style>
     .centering{
