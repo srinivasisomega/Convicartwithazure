@@ -28,12 +28,14 @@ namespace ConvicartWebApp.PresentationLayer.Controllers
         private readonly IPreferenceService PreferenceService;
         private readonly IPasswordResetService PasswordResetService;
         private readonly ISubscriptionService SubscriptionService;
-        public CustomerController(ConvicartWarehouseContext context, ISubscriptionService subscriptionService, ICustomerService customerService, IPreferenceService preferenceService, IPasswordResetService passwordResetService)
+        public CustomerController(IConfiguration configuration,ConvicartWarehouseContext context, ISubscriptionService subscriptionService, ICustomerService customerService, IPreferenceService preferenceService, IPasswordResetService passwordResetService)
         {
             CustomerService = customerService;
             PreferenceService = preferenceService;
             PasswordResetService = passwordResetService;
             SubscriptionService = subscriptionService;
+            _connectionString = configuration["AzureBlobStorage:ConnectionString"];
+            _containerName = configuration["AzureBlobStorage:ContainerName"];
         }
 
         // POST: Handle SignIn by checking if there are matching email and password in the customer table, if
@@ -466,8 +468,9 @@ namespace ConvicartWebApp.PresentationLayer.Controllers
 
             return View("SubscriptionUpdate", viewModel);
         }
-        private readonly string _connectionString = "DefaultEndpointsProtocol=https;AccountName=convicartstorageaccount;AccountKey=DmmoEBHNMogGzXztY021/HahRzVEAYVrXu9otpfv3HS3z2kjrMfdpmojRHf01pJw77FUqwlqeDVo+AStDELpRg==;EndpointSuffix=core.windows.net";
-        private readonly string _containerName = "videos";
+        private readonly string _connectionString;
+        private readonly string _containerName;
+        
 
 
         [HttpPost]

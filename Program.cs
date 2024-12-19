@@ -61,7 +61,7 @@ void ConfigureServices(WebApplicationBuilder builder)
             .AddScoped<IAddressRepository, AddressRepository>()
             .AddScoped<IStoreRepository, StoreRepository>();
 
-
+    
     services.AddHttpContextAccessor(); // For accessing HttpContext
     services.AddMemoryCache(); // In-memory caching
     services.AddSession(options =>
@@ -71,7 +71,8 @@ void ConfigureServices(WebApplicationBuilder builder)
         options.Cookie.IsEssential = true;
     });
 }
-
+var configuration = builder.Configuration;
+builder.Services.AddSingleton<IConfiguration>(configuration);
 void ConfigurePipeline(WebApplication app)
 {
     if (!app.Environment.IsDevelopment())
